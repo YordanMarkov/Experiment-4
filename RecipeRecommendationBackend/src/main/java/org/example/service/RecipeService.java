@@ -93,12 +93,35 @@ public class RecipeService {
     }
 
     public RecipeResponse recommendRecipeByIngredient(String ingredient) {
+
+        JsonNode filterResponse = mealDbClient.getMealsByIngredient(ingredient);
+
+        JsonNode meals = filterResponse.get("meals");
+
+        if (meals == null || meals.isEmpty()) {
+            return new RecipeResponse(
+                    "0",
+                    "No recipe found",
+                    "Unknown",
+                    "Unknown",
+                    "No instructions available."
+            );
+        }
+
+        // pick first meal
+        JsonNode firstMeal = meals.get(0);
+        String mealId = firstMeal.get("idMeal").asText();
+
+        // second API call
+        JsonNode lookupResponse = mealDbClient.getMealById(mealId);
+        JsonNode meal = lookupResponse.get("meals").get(0);
+
         return new RecipeResponse(
-                "7",
-                ingredient + " Recipe",
-                "Custom",
-                "International",
-                "Use " + ingredient + " and cook a simple meal."
+                meal.get("idMeal").asText(),
+                meal.get("strMeal").asText(),
+                meal.get("strCategory").asText(),
+                meal.get("strArea").asText(),
+                meal.get("strInstructions").asText()
         );
     }
 }
