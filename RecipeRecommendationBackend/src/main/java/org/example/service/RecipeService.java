@@ -1,14 +1,13 @@
 package org.example.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.example.client.MealDbClient;
 import org.example.dto.RecipeResponse;
 import org.example.dto.RecipeSummaryResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.example.client.MealDbClient;
-import com.fasterxml.jackson.databind.JsonNode;
 
 @Service
 public class RecipeService {
@@ -19,43 +18,28 @@ public class RecipeService {
         this.mealDbClient = mealDbClient;
     }
 
-    public RecipeResponse getSampleRecipe() {
-        return new RecipeResponse(
-                "1",
-                "Chicken Pasta",
-                "Pasta",
-                "Italian",
-                "Boil pasta, cook chicken, and mix together."
-        );
-    }
-
     public RecipeResponse getRecipeById(String id) {
-        if ("1".equals(id)) {
+        JsonNode root = mealDbClient.getMealById(id);
+        JsonNode meals = root.get("meals");
+
+        if (meals == null || meals.isEmpty()) {
             return new RecipeResponse(
-                    "1",
-                    "Chicken Pasta",
-                    "Pasta",
-                    "Italian",
-                    "Boil pasta, cook chicken, and mix together."
+                    "0",
+                    "No recipe found",
+                    "Unknown",
+                    "Unknown",
+                    "No instructions available."
             );
         }
 
-        if ("2".equals(id)) {
-            return new RecipeResponse(
-                    "2",
-                    "Tomato Soup",
-                    "Soup",
-                    "International",
-                    "Boil tomatoes, blend them, and serve warm."
-            );
-        }
+        JsonNode meal = meals.get(0);
 
         return new RecipeResponse(
-                "0",
-                "Unknown Recipe",
-                "Unknown",
-                "Unknown",
-                "No instructions available."
+                meal.get("idMeal").asText(),
+                meal.get("strMeal").asText(),
+                meal.get("strCategory").asText(),
+                meal.get("strArea").asText(),
+                meal.get("strInstructions").asText()
         );
     }
 
@@ -93,23 +77,47 @@ public class RecipeService {
     }
 
     public List<RecipeSummaryResponse> getRecipesByCategory(String category) {
-        return List.of(
-                new RecipeSummaryResponse("3", category + " Special"),
-                new RecipeSummaryResponse("4", category + " Delight")
-        );
+        JsonNode root = mealDbClient.getMealsByCategory(category);
+        JsonNode meals = root.get("meals");
+
+        if (meals == null || meals.isEmpty()) {
+            return List.of();
+        }
+
+        List<RecipeSummaryResponse> results = new ArrayList<>();
+
+        for (JsonNode meal : meals) {
+            results.add(new RecipeSummaryResponse(
+                    meal.get("idMeal").asText(),
+                    meal.get("strMeal").asText()
+            ));
+        }
+
+        return results;
     }
 
     public List<RecipeSummaryResponse> getRecipesByArea(String area) {
-        return List.of(
-                new RecipeSummaryResponse("5", area + " Chicken Dish"),
-                new RecipeSummaryResponse("6", area + " Rice Bowl")
-        );
+        JsonNode root = mealDbClient.getMealsByArea(area);
+        JsonNode meals = root.get("meals");
+
+        if (meals == null || meals.isEmpty()) {
+            return List.of();
+        }
+
+        List<RecipeSummaryResponse> results = new ArrayList<>();
+
+        for (JsonNode meal : meals) {
+            results.add(new RecipeSummaryResponse(
+                    meal.get("idMeal").asText(),
+                    meal.get("strMeal").asText()
+            ));
+        }
+
+        return results;
     }
 
     public RecipeResponse recommendRecipeByIngredient(String ingredient) {
-
         JsonNode filterResponse = mealDbClient.getMealsByIngredient(ingredient);
-
         JsonNode meals = filterResponse.get("meals");
 
         if (meals == null || meals.isEmpty()) {
@@ -122,11 +130,9 @@ public class RecipeService {
             );
         }
 
-        // pick first meal
         JsonNode firstMeal = meals.get(0);
         String mealId = firstMeal.get("idMeal").asText();
 
-        // second API call
         JsonNode lookupResponse = mealDbClient.getMealById(mealId);
         JsonNode meal = lookupResponse.get("meals").get(0);
 

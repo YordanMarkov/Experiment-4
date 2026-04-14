@@ -58,4 +58,26 @@ public class MealDbClient {
             throw new RuntimeException("Failed to parse JSON", e);
         }
     }
+
+    public JsonNode getMealsByCategory(String category) {
+        String url = BASE_URL + "/filter.php?c=" + category;
+        String response = restTemplate.getForObject(url, String.class);
+
+        try {
+            return objectMapper.readTree(response);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse JSON", e);
+        }
+    }
+
+    public JsonNode getMealsByArea(String area) {
+        String url = BASE_URL + "/filter.php?a=" + area;
+        String response = restTemplate.getForObject(url, String.class);
+
+        try {
+            return objectMapper.readTree(response);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse JSON", e);
+        }
+    }
 }

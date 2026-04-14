@@ -21,11 +21,6 @@ public class RecipeController {
         this.recipeService = recipeService;
     }
 
-    @GetMapping("/sample")
-    public RecipeResponse getSampleRecipe() {
-        return recipeService.getSampleRecipe();
-    }
-
     @GetMapping("/{id}")
     public RecipeResponse getRecipeById(@PathVariable String id) {
         return recipeService.getRecipeById(id);
