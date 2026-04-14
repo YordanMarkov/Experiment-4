@@ -6,8 +6,16 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import org.example.client.MealDbClient;
+
 @Service
 public class RecipeService {
+
+    private final MealDbClient mealDbClient;
+
+    public RecipeService(MealDbClient mealDbClient) {
+        this.mealDbClient = mealDbClient;
+    }
 
     public RecipeResponse getSampleRecipe() {
         return new RecipeResponse(
@@ -49,14 +57,8 @@ public class RecipeService {
         );
     }
 
-    public RecipeResponse getRandomRecipe() {
-        return new RecipeResponse(
-                "2",
-                "Tomato Soup",
-                "Soup",
-                "International",
-                "Boil tomatoes, blend them, and serve warm."
-        );
+    public String getRandomRecipe() {
+        return mealDbClient.getRandomMealRaw();
     }
 
     public List<RecipeSummaryResponse> searchRecipesByName(String name) {

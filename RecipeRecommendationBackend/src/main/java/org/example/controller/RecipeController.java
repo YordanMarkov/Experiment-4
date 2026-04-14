@@ -32,7 +32,7 @@ public class RecipeController {
     }
 
     @GetMapping("/random")
-    public RecipeResponse getRandomRecipe() {
+    public String getRandomRecipe() {
         return recipeService.getRandomRecipe();
     }
 
