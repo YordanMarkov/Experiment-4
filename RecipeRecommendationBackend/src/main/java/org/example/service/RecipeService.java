@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 import org.example.client.MealDbClient;
+import com.fasterxml.jackson.databind.JsonNode;
 
 @Service
 public class RecipeService {
@@ -57,8 +58,17 @@ public class RecipeService {
         );
     }
 
-    public String getRandomRecipe() {
-        return mealDbClient.getRandomMealRaw();
+    public RecipeResponse getRandomRecipe() {
+        JsonNode root = mealDbClient.getRandomMeal();
+        JsonNode meal = root.get("meals").get(0);
+
+        return new RecipeResponse(
+                meal.get("idMeal").asText(),
+                meal.get("strMeal").asText(),
+                meal.get("strCategory").asText(),
+                meal.get("strArea").asText(),
+                meal.get("strInstructions").asText()
+        );
     }
 
     public List<RecipeSummaryResponse> searchRecipesByName(String name) {
