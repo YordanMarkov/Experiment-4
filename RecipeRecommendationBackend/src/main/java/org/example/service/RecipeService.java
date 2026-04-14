@@ -4,6 +4,7 @@ import org.example.dto.RecipeResponse;
 import org.example.dto.RecipeSummaryResponse;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.example.client.MealDbClient;
@@ -72,10 +73,23 @@ public class RecipeService {
     }
 
     public List<RecipeSummaryResponse> searchRecipesByName(String name) {
-        return List.of(
-                new RecipeSummaryResponse("1", "Chicken Pasta"),
-                new RecipeSummaryResponse("2", "Tomato Soup")
-        );
+        JsonNode root = mealDbClient.searchMealsByName(name);
+        JsonNode meals = root.get("meals");
+
+        if (meals == null || meals.isEmpty()) {
+            return List.of();
+        }
+
+        List<RecipeSummaryResponse> results = new ArrayList<>();
+
+        for (JsonNode meal : meals) {
+            results.add(new RecipeSummaryResponse(
+                    meal.get("idMeal").asText(),
+                    meal.get("strMeal").asText()
+            ));
+        }
+
+        return results;
     }
 
     public List<RecipeSummaryResponse> getRecipesByCategory(String category) {
