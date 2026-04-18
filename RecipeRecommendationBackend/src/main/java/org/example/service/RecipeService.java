@@ -1,7 +1,7 @@
 package org.example.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.example.client.MealDbClient;
+import org.example.client.MealDb;
 import org.example.dto.RecipeResponse;
 import org.example.dto.RecipeSummaryResponse;
 import org.springframework.stereotype.Service;
@@ -12,14 +12,14 @@ import java.util.List;
 @Service
 public class RecipeService {
 
-    private final MealDbClient mealDbClient;
+    private final MealDb mealDb;
 
-    public RecipeService(MealDbClient mealDbClient) {
-        this.mealDbClient = mealDbClient;
+    public RecipeService(MealDb mealDb) {
+        this.mealDb = mealDb;
     }
 
     public RecipeResponse getRecipeById(String id) {
-        JsonNode root = mealDbClient.getMealById(id);
+        JsonNode root = mealDb.getMealById(id);
         JsonNode meals = root.get("meals");
 
         if (meals == null || meals.isEmpty()) {
@@ -44,7 +44,7 @@ public class RecipeService {
     }
 
     public RecipeResponse getRandomRecipe() {
-        JsonNode root = mealDbClient.getRandomMeal();
+        JsonNode root = mealDb.getRandomMeal();
         JsonNode meal = root.get("meals").get(0);
 
         return new RecipeResponse(
@@ -57,7 +57,7 @@ public class RecipeService {
     }
 
     public List<RecipeSummaryResponse> searchRecipesByName(String name) {
-        JsonNode root = mealDbClient.searchMealsByName(name);
+        JsonNode root = mealDb.searchMealsByName(name);
         JsonNode meals = root.get("meals");
 
         if (meals == null || meals.isEmpty()) {
@@ -77,7 +77,7 @@ public class RecipeService {
     }
 
     public List<RecipeSummaryResponse> getRecipesByCategory(String category) {
-        JsonNode root = mealDbClient.getMealsByCategory(category);
+        JsonNode root = mealDb.getMealsByCategory(category);
         JsonNode meals = root.get("meals");
 
         if (meals == null || meals.isEmpty()) {
@@ -97,7 +97,7 @@ public class RecipeService {
     }
 
     public List<RecipeSummaryResponse> getRecipesByArea(String area) {
-        JsonNode root = mealDbClient.getMealsByArea(area);
+        JsonNode root = mealDb.getMealsByArea(area);
         JsonNode meals = root.get("meals");
 
         if (meals == null || meals.isEmpty()) {
@@ -117,7 +117,7 @@ public class RecipeService {
     }
 
     public RecipeResponse recommendRecipeByIngredient(String ingredient) {
-        JsonNode filterResponse = mealDbClient.getMealsByIngredient(ingredient);
+        JsonNode filterResponse = mealDb.getMealsByIngredient(ingredient);
         JsonNode meals = filterResponse.get("meals");
 
         if (meals == null || meals.isEmpty()) {
@@ -133,7 +133,7 @@ public class RecipeService {
         JsonNode firstMeal = meals.get(0);
         String mealId = firstMeal.get("idMeal").asText();
 
-        JsonNode lookupResponse = mealDbClient.getMealById(mealId);
+        JsonNode lookupResponse = mealDb.getMealById(mealId);
         JsonNode meal = lookupResponse.get("meals").get(0);
 
         return new RecipeResponse(

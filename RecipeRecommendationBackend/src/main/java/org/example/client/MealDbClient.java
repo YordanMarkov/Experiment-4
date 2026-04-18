@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
-public class MealDbClient {
+public class MealDbClient implements MealDb {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -15,6 +15,7 @@ public class MealDbClient {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @Override
     public JsonNode getRandomMeal() {
         String url = BASE_URL + "/random.php";
         String response = restTemplate.getForObject(url, String.class);
@@ -26,6 +27,7 @@ public class MealDbClient {
         }
     }
 
+    @Override
     public JsonNode getMealsByIngredient(String ingredient) {
         String url = BASE_URL + "/filter.php?i=" + ingredient;
         String response = restTemplate.getForObject(url, String.class);
@@ -37,6 +39,7 @@ public class MealDbClient {
         }
     }
 
+    @Override
     public JsonNode getMealById(String id) {
         String url = BASE_URL + "/lookup.php?i=" + id;
         String response = restTemplate.getForObject(url, String.class);
@@ -48,6 +51,7 @@ public class MealDbClient {
         }
     }
 
+    @Override
     public JsonNode searchMealsByName(String name) {
         String url = BASE_URL + "/search.php?s=" + name;
         String response = restTemplate.getForObject(url, String.class);
@@ -59,6 +63,7 @@ public class MealDbClient {
         }
     }
 
+    @Override
     public JsonNode getMealsByCategory(String category) {
         String url = BASE_URL + "/filter.php?c=" + category;
         String response = restTemplate.getForObject(url, String.class);
@@ -70,6 +75,7 @@ public class MealDbClient {
         }
     }
 
+    @Override
     public JsonNode getMealsByArea(String area) {
         String url = BASE_URL + "/filter.php?a=" + area;
         String response = restTemplate.getForObject(url, String.class);
