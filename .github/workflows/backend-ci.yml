@@ -10,6 +10,10 @@ jobs:
   test-and-build:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: RecipeRecommendationBackend
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,19 +25,22 @@ jobs:
           java-version: '17'
           cache: maven
 
-      - name: Build and test
-        run: mvn clean verify
+      - name: Run tests
+        run: mvn clean test
+
+      - name: Package application
+        run: mvn package -DskipTests
 
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
-          path: target/surefire-reports/
+          path: backend/target/surefire-reports/
 
       - name: Upload packaged jar
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: application-jar
-          path: target/*.jar
+          path: backend/target/*.jar
