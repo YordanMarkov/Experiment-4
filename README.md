@@ -1,103 +1,169 @@
-# Recipe Recommendation Backend
+# Experiment 4 – Service Reliability (Quick Setup Guide)
 
-A Java Spring Boot backend that integrates with TheMealDB API to provide recipe data through REST endpoints.
+## Requirements
 
-## Base URL
+Make sure you have installed:
 
-```
-http://localhost:8080/api/recipes
+- Java (required for WireMock)
+- k6 (for load testing)
+
+### Install on macOS (Homebrew)
+
+```bash
+brew install openjdk
+brew install k6
 ```
 
 ---
 
-## Endpoints
+## Running the System
 
-### Get Random Recipe
+### 1. Start WireMock (Mock External API)
+
+```bash
+java -jar wiremock-standalone.jar --port 9090
+```
+
+WireMock runs on:
+http://localhost:9090
+
+---
+
+### 2. Configure Stubs
+
+WireMock mappings are located in:
 
 ```
-GET /random
+/mappings
 ```
 
-**Example:**
+#### Example Stub (200 OK)
 
+```json
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/random.php"
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "meals": [
+        {
+          "idMeal": "12345",
+          "strMeal": "Mock Meal",
+          "strCategory": "Test",
+          "strArea": "Test",
+          "strInstructions": "Test instructions"
+        }
+      ]
+    }
+  }
+}
 ```
+
+---
+
+#### Failure Stub (500 Error)
+
+```json
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/random.php"
+  },
+  "response": {
+    "status": 500
+  }
+}
+```
+
+---
+
+#### Slow Response Stub (Latency Simulation)
+
+```json
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/random.php"
+  },
+  "response": {
+    "status": 200,
+    "fixedDelayMilliseconds": 3000,
+    "jsonBody": {
+      "meals": [
+        {
+          "idMeal": "12345",
+          "strMeal": "Slow Meal",
+          "strCategory": "Test",
+          "strArea": "Test",
+          "strInstructions": "Slow instructions"
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+### 3. Run Backend (Spring Boot)
+
+```bash
+./mvnw spring-boot:run
+```
+
+Backend runs on:
+http://localhost:8080
+
+Test endpoint:
 http://localhost:8080/api/recipes/random
+
+---
+
+### 4. Run Load Test (k6)
+
+```bash
+k6 run load-test.js
 ```
 
 ---
 
-### Get Recipe by ID
+## Observability
 
-```
-GET /{id}
-```
+Available endpoints:
 
-**Example:**
+Health:
+http://localhost:8080/actuator/health
 
-```
-http://localhost:8080/api/recipes/52772
-```
+Metrics:
+http://localhost:8080/actuator/metrics
 
----
-
-### Search Recipes by Name
-
-```
-GET /search?name={name}
-```
-
-**Example:**
-
-```
-http://localhost:8080/api/recipes/search?name=chicken
-```
+HTTP request metrics:
+http://localhost:8080/actuator/metrics/http.server.requests
 
 ---
 
-### Get Recipes by Category
+## Testing Scenarios
 
-```
-GET /category?name={category}
-```
+### Normal
+- WireMock returns 200
+- Expected: successful responses
 
-**Example:**
+### Failure
+- WireMock returns 500
+- Baseline: errors
+- With resilience: fallback response
 
-```
-http://localhost:8080/api/recipes/category?name=Seafood
-```
-
----
-
-### Get Recipes by Area
-
-```
-GET /area?name={area}
-```
-
-**Example:**
-
-```
-http://localhost:8080/api/recipes/area?name=Canadian
-```
-
----
-
-### Recommend Recipe by Ingredient
-
-```
-GET /recommend?ingredient={ingredient}
-```
-
-**Example:**
-
-```
-http://localhost:8080/api/recipes/recommend?ingredient=chicken_breast
-```
+### Slow
+- WireMock delayed response
+- Used to test latency handling
 
 ---
 
 ## Notes
 
-* All endpoints return JSON.
-* Data is fetched from TheMealDB API.
-* Some endpoints return a single recipe, others return a list of recipe summaries.
+- Start WireMock before the backend
+- Switch stubs to simulate different scenarios
+- Use k6 to compare baseline and resilient behavior
