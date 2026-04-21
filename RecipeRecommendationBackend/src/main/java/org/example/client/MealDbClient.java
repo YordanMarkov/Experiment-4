@@ -48,12 +48,11 @@ public class MealDbClient implements MealDb {
     }
 
     private JsonNode getJson(String url) {
-        String response = restTemplate.getForObject(url, String.class);
-
         try {
+            String response = restTemplate.getForObject(url, String.class);
             return objectMapper.readTree(response);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse JSON", e);
+            throw new RuntimeException("MealDB call failed: " + url, e);
         }
     }
 }

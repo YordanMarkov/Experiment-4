@@ -1,9 +1,13 @@
 package org.example.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.example.client.MealDb;
 import org.example.dto.RecipeResponse;
 import org.example.dto.RecipeSummaryResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -11,6 +15,8 @@ import java.util.List;
 
 @Service
 public class RecipeService {
+
+    private static final Logger log = LoggerFactory.getLogger(RecipeService.class);
 
     private final MealDb mealDb;
 
@@ -43,9 +49,18 @@ public class RecipeService {
         );
     }
 
+    @Retry(name = "mealDbRetry", fallbackMethod = "randomRecipeFallback")
+    @CircuitBreaker(name = "mealDbCircuitBreaker", fallbackMethod = "randomRecipeFallback")
     public RecipeResponse getRandomRecipe() {
+        log.info("Requesting random recipe from external MealDB service");
         JsonNode root = mealDb.getRandomMeal();
-        JsonNode meal = root.get("meals").get(0);
+        JsonNode meals = root.get("meals");
+
+        if (meals == null || meals.isEmpty()) {
+            throw new RuntimeException("MealDB returned no meals for random recipe");
+        }
+
+        JsonNode meal = meals.get(0);
 
         return new RecipeResponse(
                 meal.get("idMeal").asText(),
@@ -53,6 +68,18 @@ public class RecipeService {
                 meal.get("strCategory").asText(),
                 meal.get("strArea").asText(),
                 meal.get("strInstructions").asText()
+        );
+    }
+
+    public RecipeResponse randomRecipeFallback(Throwable t) {
+        log.warn("Fallback triggered for getRandomRecipe: {}", t.toString());
+
+        return new RecipeResponse(
+                "fallback-1",
+                "Fallback Recipe",
+                "Unavailable",
+                "Unknown",
+                "A fallback response was returned because the external recipe service failed."
         );
     }
 
